@@ -1,0 +1,174 @@
+
+<style>
+  .sd-wrap { padding: 1rem 0; font-family: var(--font-sans); }
+  .sd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 1rem; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .field input { width: 100%; box-sizing: border-box; }
+  .ratio-inputs { display: flex; gap: 6px; align-items: center; }
+  .ratio-inputs input { width: 52px; text-align: center; }
+  .ratio-sep { font-size: 16px; color: var(--color-text-tertiary); }
+  .divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 1rem 0; }
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 14px; }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { color: var(--color-text-secondary); }
+  .result-val { font-weight: 500; color: var(--color-text-primary); }
+  .result-val.highlight { color: var(--color-text-info); }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin: 10px 0 4px; }
+  .pulled-tag { font-size: 11px; color: var(--color-text-info); margin-left: 6px; }
+  .empty-state { color: var(--color-text-tertiary); font-size: 13px; text-align: center; padding: 1.5rem 0; }
+  @media (max-width: 520px) { .sd-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="sd-wrap">
+  <h2 class="sr-only">Sourdough dough and feeding calculator</h2>
+  <div class="sd-grid">
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-bread" aria-hidden="true"></i> A — total dough recipe</p>
+      <div class="field">
+        <label for="totalFlour">Total flour (g)</label>
+        <input type="number" id="totalFlour" placeholder="e.g. 1000" min="1" step="1" />
+      </div>
+      <div class="field">
+        <label for="hydration">Hydration (%)</label>
+        <input type="number" id="hydration" placeholder="e.g. 72" min="1" max="200" step="0.1" />
+      </div>
+      <div class="field">
+        <label for="inoculation">Inoculation (%)</label>
+        <input type="number" id="inoculation" placeholder="e.g. 20" min="0.1" max="100" step="0.1" />
+      </div>
+      <hr class="divider" />
+      <div id="recipeOutput"><p class="empty-state">Fill in the fields above.</p></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><i class="ti ti-droplet" aria-hidden="true"></i> B — starter feeding</p>
+      <div class="field">
+        <label>Total starter needed (g) <span class="pulled-tag" id="pulledTag"></span></label>
+        <input type="number" id="starterTotal" placeholder="Auto from A, or enter manually" min="0.1" step="0.1" />
+      </div>
+      <div class="field">
+        <label>Feeding ratio (seed : flour : water)</label>
+        <div class="ratio-inputs">
+          <input type="number" id="r1" value="1" min="0.1" step="0.1" />
+          <span class="ratio-sep">:</span>
+          <input type="number" id="r2" value="4" min="0.1" step="0.1" />
+          <span class="ratio-sep">:</span>
+          <input type="number" id="r3" value="4" min="0.1" step="0.1" />
+        </div>
+      </div>
+      <hr class="divider" />
+      <div id="feedingOutput"><p class="empty-state">Enter starter total and feeding ratio above.</p></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+['totalFlour','hydration','inoculation','starterTotal','r1','r2','r3'].forEach(id =>
+  document.getElementById(id).addEventListener('input', compute)
+);
+
+function fmt(n) { return n.toFixed(1) + ' g'; }
+
+function compute() {
+  const flour    = parseFloat(document.getElementById('totalFlour').value);
+  const hydPct   = parseFloat(document.getElementById('hydration').value);
+  const inocPct  = parseFloat(document.getElementById('inoculation').value);
+  const r1       = parseFloat(document.getElementById('r1').value) || 1;
+  const r2       = parseFloat(document.getElementById('r2').value) || 4;
+  const r3       = parseFloat(document.getElementById('r3').value) || 4;
+
+  const recipeDiv  = document.getElementById('recipeOutput');
+  const feedDiv    = document.getElementById('feedingOutput');
+  const pulledTag  = document.getElementById('pulledTag');
+  const starterInput = document.getElementById('starterTotal');
+
+  const validDough = flour > 0 && hydPct > 0 && inocPct > 0;
+  const ratioTotal = r1 + r2 + r3;
+
+  // Starter hydration comes from the feeding ratio: water part / flour part
+  // e.g. 1:4:4 → starter is 50% hydration (4 water / 4 flour = 1.0, i.e. 100%... wait)
+  // ratio r1=seed, r2=flour, r3=water → hydration of the starter = r3/r2
+  const starterHydration = r3 / r2; // e.g. 4/4 = 1.0 = 100% hydration
+
+  let starterTotal;
+
+  if (validDough) {
+    // Starter total = inoculation % of total flour (baker's %)
+    starterTotal = flour * inocPct / 100;
+
+    // Pull into B input if user isn't editing it
+    if (document.activeElement !== starterInput) {
+      starterInput.value = starterTotal.toFixed(1);
+    }
+    pulledTag.textContent = '← from A';
+  } else {
+    starterTotal = parseFloat(starterInput.value);
+    pulledTag.textContent = '';
+  }
+
+  // === Shared core calculation ===
+  // From the starter total and its hydration, derive flour and water it contributes:
+  // starterTotal = starterFlour + starterWater
+  // starterWater = starterFlour * starterHydration
+  // → starterTotal = starterFlour * (1 + starterHydration)
+  let starterFlour, starterWater, seed, feedFlour, feedWater;
+
+  if (starterTotal > 0 && r1 > 0 && r2 > 0 && r3 > 0) {
+    starterFlour = starterTotal / (1 + starterHydration);
+    starterWater = starterTotal - starterFlour;
+
+    // B: split starterTotal by ratio to get feeding amounts
+    // The "seed" is the existing mature starter used to inoculate the new batch
+    // seed + feedFlour + feedWater = starterTotal
+    seed       = starterTotal * r1 / ratioTotal;
+    feedFlour  = starterTotal * r2 / ratioTotal;
+    feedWater  = starterTotal * r3 / ratioTotal;
+
+    // Verify: feedFlour / feedWater = r2/r3 = same hydration ✓
+    // And: starterFlour = feedFlour (the flour contributed to the dough IS the fresh flour in the feeding)
+    // So we use feedFlour and feedWater as the authoritative split for the dough recipe too
+    starterFlour = feedFlour;
+    starterWater = feedWater;
+  }
+
+  // === Widget A output ===
+  if (validDough && starterTotal > 0) {
+    const totalWater = flour * hydPct / 100;
+    const finalFlour = flour - starterFlour;
+    const finalWater = totalWater - starterWater;
+
+    recipeDiv.innerHTML = `
+      <p class="section-label">Totals</p>
+      <div class="result-row"><span class="result-label">Total flour</span><span class="result-val">${fmt(flour)}</span></div>
+      <div class="result-row"><span class="result-label">Total water</span><span class="result-val">${fmt(totalWater)}</span></div>
+      <div class="result-row"><span class="result-label">Total starter</span><span class="result-val highlight">${fmt(starterTotal)}</span></div>
+      <p class="section-label">From starter</p>
+      <div class="result-row"><span class="result-label">Flour from starter</span><span class="result-val">${fmt(starterFlour)}</span></div>
+      <div class="result-row"><span class="result-label">Water from starter</span><span class="result-val">${fmt(starterWater)}</span></div>
+      <p class="section-label">Final dough additions</p>
+      <div class="result-row"><span class="result-label">Flour to add</span><span class="result-val">${fmt(finalFlour)}</span></div>
+      <div class="result-row"><span class="result-label">Water to add</span><span class="result-val">${fmt(finalWater)}</span></div>
+    `;
+  } else {
+    recipeDiv.innerHTML = '<p class="empty-state">Fill in the fields above.</p>';
+  }
+
+  // === Widget B output ===
+  if (starterTotal > 0 && seed !== undefined) {
+    feedDiv.innerHTML = `
+      <p class="section-label">Feeding breakdown</p>
+      <div class="result-row"><span class="result-label">Seed (mature starter)</span><span class="result-val">${fmt(seed)}</span></div>
+      <div class="result-row"><span class="result-label">Fresh flour</span><span class="result-val">${fmt(feedFlour)}</span></div>
+      <div class="result-row"><span class="result-label">Water</span><span class="result-val">${fmt(feedWater)}</span></div>
+      <div class="result-row" style="padding-top:8px;"><span class="result-label" style="font-weight:500;">Total starter after feeding</span><span class="result-val highlight">${fmt(starterTotal)}</span></div>
+    `;
+  } else {
+    feedDiv.innerHTML = '<p class="empty-state">Enter starter total and feeding ratio above.</p>';
+  }
+}
+</script>
