@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sourdough Calculator — Capitani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #a81911;
+    --red-light: #faeae9;
+    --red-mid: #c9302a;
+    --green: #006e3d;
+    --green-light: #dff0e8;
+    --amber: #b06000;
+    --amber-light: #fdf3e3;
+    --amber-bg: #fff8ee;
+    --ink: #1a1410;
+    --ink-mid: #4a3f38;
+    --ink-light: #7a6e67;
+    --cream: #f7f4f0;
+    --cream-mid: #ede7de;
+    --white: #ffffff;
+    --border: #ddd5cb;
+    --border-strong: #bfb4aa;
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.65;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 1.4rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .logo-wrap { height: 52px; flex-shrink: 0; }
+  .logo-wrap svg { height: 52px; width: auto; }
+  .header-divider { width: 1px; height: 40px; background: var(--border-strong); flex-shrink: 0; }
+  .header-text h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 1.6rem;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .header-text p {
+    font-size: 0.82rem;
+    color: var(--ink-light);
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  /* ── Main ── */
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+  }
+
+  /* ── Section label row ── */
+  .section-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.1rem;
+  }
+  .section-row + .grid { margin-bottom: 2.5rem; }
+
+  .section-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--ink-mid);
+    letter-spacing: 0.03em;
+  }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .grid.single { grid-template-columns: 1fr; max-width: 480px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 1.1rem 1.4rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .card-header.red   { background: var(--red-light);   border-bottom-color: #f0c8c6; }
+  .card-header.green { background: var(--green-light);  border-bottom-color: #b8dfc9; }
+  .card-header.amber { background: var(--amber-light);  border-bottom-color: #f0d9b0; }
+
+  .card-badge {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .card-badge.red   { background: var(--red);   color: #fff; }
+  .card-badge.green { background: var(--green);  color: #fff; }
+  .card-badge.amber { background: var(--amber);  color: #fff; }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+
+  .card-body { padding: 1.4rem; }
+
+  /* ── Fields ── */
+  .field { margin-bottom: 1.1rem; }
+  .field:last-of-type { margin-bottom: 0; }
+
+  .field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+
+  .field input[type="number"] {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: 'Jost', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--ink);
+    background: var(--cream);
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield;
+  }
+  .field input[type="number"]::-webkit-outer-spin-button,
+  .field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input[type="number"]:focus {
+    outline: none;
+    border-color: var(--red);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(168,25,17,0.08);
+  }
+
+  /* C widget inputs focus in amber */
+  .card-header.amber ~ .card-body .field input[type="number"]:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(176,96,0,0.1);
+  }
+
+  /* ── Toggle: seed vs flour ── */
+  .toggle-group {
+    display: flex;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 1.1rem;
+  }
+  .toggle-group button {
+    flex: 1;
+    padding: 0.6rem 0.5rem;
+    border: none;
+    background: var(--cream);
+    font-family: 'Jost', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 400;
+    color: var(--ink-light);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .toggle-group button + button { border-left: 1.5px solid var(--border-strong); }
+  .toggle-group button.active {
+    background: var(--amber);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* ── Ratio row ── */
+  .ratio-row { display: flex; align-items: center; gap: 8px; }
+  .ratio-row input[type="number"] { text-align: center; padding: 0.65rem 0.4rem; }
+  .ratio-sep { font-size: 1.2rem; color: var(--border-strong); flex-shrink: 0; font-weight: 300; }
+
+  /* ── Divider ── */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.3rem 0 1.1rem;
+  }
+
+  /* ── Result rows ── */
+  .result-section-label {
+    font-size: 0.73rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--ink-light);
+    margin-bottom: 0.4rem;
+    margin-top: 0.9rem;
+  }
+  .result-section-label:first-child { margin-top: 0; }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--cream-mid);
+    font-size: 0.97rem;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { color: var(--ink-mid); font-weight: 300; }
+  .result-val {
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    font-size: 1rem;
+  }
+  .result-val.accent-red   { color: var(--red); }
+  .result-val.accent-green { color: var(--green); }
+  .result-val.accent-amber { color: var(--amber); }
+
+  .result-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 12px;
+    margin-top: 10px;
+    background: var(--cream-mid);
+    border-radius: var(--radius-sm);
+    font-size: 0.97rem;
+  }
+  .result-total .result-label { font-weight: 400; color: var(--ink); }
+  .result-total .result-val   { font-size: 1.05rem; }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--ink-light);
+    font-size: 0.95rem;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  .pulled-tag {
+    font-size: 0.73rem;
+    color: var(--green);
+    letter-spacing: 0.04em;
+    font-weight: 400;
+    font-style: normal;
+    margin-left: 4px;
+    text-transform: none;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 1.75rem 2rem;
+    font-size: 0.82rem;
+    color: var(--ink-light);
+    letter-spacing: 0.05em;
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+  footer span { color: var(--red); }
+
+  /* ── Mobile ── */
+  @media (max-width: 620px) {
+    header { padding: 1rem 1.25rem; gap: 1rem; }
+    .logo-wrap { height: 40px; }
+    .logo-wrap svg { height: 40px; }
+    .header-text h1 { font-size: 1.3rem; }
+    main { padding: 1.5rem 1rem 3.5rem; }
+    .grid { grid-template-columns: 1fr; gap: 16px; }
+    .grid.single { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="150 160 550 230" aria-label="Capitani logo">
+      <path transform="matrix(1,0,0,-1,0,595.2756)" d="M277.9339 369.6866C285.6699 374.1517 287.1873 376.5348 294.4522 377.8441 313.5892 381.2927 335.6484 397.8845 354.7151 385.0761 368.6014 375.7479 359.3854 371.0449 361.9542 364.8898 364.646 358.4398 360.6996 358.5339 351.5868 352.9845 346.674 349.9926 340.8199 351.6959 339.5801 356.1911 335.2173 372.0067 343.0599 370.1602 341.0133 375.4012 338.9769 380.6164 333.7189 375.817 327.189 375.7694 310.4107 375.6467 312.5129 370.7898 302.188 367.8063 281.6742 361.8785 248.5979 338.6455 232.3307 325.8609 220.5343 316.59 214.9081 310.746 205.5736 299.2147 199.6818 291.9365 190.65 271.2855 190.65 261.6973 190.65 251.1173 198.0782 245.8896 208.2294 245.4647 218.2221 245.0469 239.1948 244.0318 247.847 245.9418 251.9532 246.8483 253.4854 244.8731 255.9983 244.8731 259.3066 244.8731 260.8319 246.4662 266.1338 245.9713 269.0711 245.6969 283.4926 246.3109 286.5753 246.7278 296.1439 248.0221 308.6892 249.1211 318.3392 250.1062 340.8591 252.4048 374.8116 256.7886 398.7765 260.7939 408.8503 262.4777 408.202 256.972 403.126 254.8284 396.4958 252.0286 341.5765 240.1438 326.8621 238.5884 310.9218 236.9032 287.6913 234.6511 272.2258 231.5398 271.0653 231.3062 252.574 230.5746 252.4564 230.5746 241.4339 230.5746 241.5257 232.9821 232.4214 229.7205 230.7866 229.1349 212.4428 227.4049 212.1894 227.4049 209.668 227.4049 195.7008 229.464 193.197 230.1973 181.0233 233.7627 172.7113 251.4498 172.7113 264.6808 172.7113 291.3318 204.4604 324.0944 226.675 338.6489 238.3277 346.2837 253.6206 359.2151 265.7415 364.3554 269.8308 366.0894 273.9557 367.6989 277.9339 369.6866" fill="#a81911" fill-rule="evenodd"/>
+      <path transform="matrix(1,0,0,-1,0,595.2756)" d="M636.5174 323.375C636.5174 317.9775 640.7507 312.7691 646.113 312.7691 654.4018 312.7691 657.2273 322.2655 659.0098 328.6596 659.4633 330.2864 659.9279 331.5685 661.7081 330.5395 662.1327 330.2938 664.9044 328.6885 665.2658 328.6582 667.728 333.3118 669.0076 334.6974 666.5088 339.4193 660.846 339.4193 659.1895 341.6357 651.3494 339.622 644.0981 337.7594 636.5174 331.4407 636.5174 323.375" fill="#006e3d" fill-rule="evenodd"/>
+      <path transform="matrix(1,0,0,-1,0,595.2756)" d="M487.2416 286.219C478.169 286.219 499.4776 311.637 505.5267 302.6313 508.9927 297.4711 510.4704 298.5225 502.7261 293.8102 498.636 291.3211 494.9042 286.219 487.2416 286.219ZM427.2148 323.7673C430.5274 324.3288 435.4288 324.6888 437.6611 324.6888 436.0944 321.0344 433.3314 314.9345 432.7586 313.5353 430.6901 308.3947 426.4217 295.6209 424.4562 291.653 418.9008 280.4377 380.5977 277.3998 401.5142 298.9721 409.6712 307.3847 393.6535 316.6254 385.096 295.3431 383.5888 291.5952 382.263 288.7016 378.6077 286.6334 363.4058 278.0328 356.8555 279.5797 359.1865 297.4728 362.6816 324.303 340.9668 302.2424 333.4363 294.7827 330.3238 291.6998 316.9579 276.9868 315.894 276.8984 315.894 291.0855 335.158 297.8606 328.5643 309.3693 324.3311 316.7586 315.0655 307.4151 313.5821 299.9475 311.2393 288.1531 306.7974 288.6693 297.5482 284.7498 283.3118 278.7163 286.9047 290.827 282.0251 296.6391 279.6041 299.5231 277.3633 299.13 278.9657 303.3232 282.4308 312.3899 272.7153 319.3401 261.4192 314.1043 235.135 301.9215 218.8831 271.5392 235.4655 271.5392 246.7171 271.5392 255.7899 280.2305 263.2266 282.5294 269.9575 284.61 272.7153 282.1402 276.1016 278.1354 281.283 272.0072 288.2965 272.2612 295.0007 274.5091 310.0867 279.5669 303.6521 273.4396 298.5642 264.6272 293.2795 255.4741 282.6074 233.4149 280.1789 225.0119 274.4342 205.132 283.2117 202.5768 288.2469 207.6273 302.3436 221.7674 287.2114 219.1419 303.0622 246.6164 309.4812 257.7427 328.5465 276.8114 338.6313 284.6962 354.4954 297.0995 332.8676 254.643 375.6478 275.3666 378.7551 276.8717 382.1499 279.7313 384.5699 275.6945 391.3356 264.4095 407.7113 271.7685 416.6036 276.2578 422.2956 279.1315 421.6218 276.0693 422.718 270.9499 426.6638 252.5241 456.7694 276.7229 464.1622 276.7229 467.6437 276.7229 464.9766 266.3257 481.337 273.9455 491.5491 278.7018 496.3558 282.7814 504.0266 282.7814 510.751 282.7814 512.8367 273.8693 520.8117 273.8693 526.4949 273.8693 537.3533 277.5107 540.8606 276.6943 541.6577 273.6896 538.6175 268.2238 543.9283 266.7053 550.374 264.8628 552.3616 279.3776 562.494 286.2663 594.345 307.9208 583.6127 258.4729 612.6633 272.9948 614.2425 273.784 619.2125 276.9559 620.5895 276.9559 623.6059 276.9559 624.8001 269.7324 632.4789 269.7324 642.5382 269.7324 654.5803 276.1036 662.7087 282.8004 669.9705 288.7832 669.886 291.0937 666.7517 291.0648 664.9877 291.0487 654.592 285.6382 650.6354 284.3824 637.8806 280.3343 627.7011 285.5265 637.3162 296.2973 640.3079 299.6487 642.037 299.6084 642.037 304.3942 642.037 307.5885 635.2954 312.7363 627.916 302.8966 623.8344 297.4538 623.4355 292.6397 620.46 288.6786 618.2977 285.8 609.5622 281.3258 605.9027 281.3258 597.1473 281.3258 596.6745 300.0529 588.6261 302.9712 580.805 305.8067 569.7037 296.7968 565.5719 296.7046 565.685 301.7792 581.4017 312.0905 574.6397 321.1472 565.3976 333.5247 556.3077 301.6046 554.1939 298.2906 546.7887 286.6808 546.1753 290.334 536.665 285.5191 520.005 277.0846 525.5243 292.4056 517.3194 298.5732 513.1945 301.674 517.0816 301.214 517.0816 306.4912 517.0816 311.6083 512.1334 316.2779 507.0572 316.2779 496.0468 316.2779 482.8768 304.6555 475.8729 296.6502 465.2053 284.4581 439.6405 274.2661 435.9838 279.9578 431.2542 287.32 446.044 316.4737 450.3623 323.3137 456.1875 324.5627 487.9009 330.1189 494.1612 325.0585 496.5897 319.8101 504.4929 325.6699 504.4929 329.7929 504.4929 345.7174 473.1863 335.6181 463.9289 335.6181 447.008 335.6181 477.9164 358.1048 477.9164 368.2403 477.9164 371.6359 475.2507 375.9299 471.6221 375.9299 466.8817 375.9299 452.1416 350.0583 449.803 346.4753 446.9865 342.1602 445.8019 336.5895 439.8769 335.8913 435.8554 335.4174 430.9016 335.1526 428.3436 335.0421 419.4009 334.6557 421.1739 322.744 427.2148 323.7673ZM404.1731 315.6471C410.2897 315.6471 416.556 320.5783 418.1698 326.6617 419.7835 332.7449 416.1334 337.6763 410.0168 337.6763 403.9004 337.6763 397.6339 332.7449 396.0201 326.6617 394.4066 320.5783 398.0568 315.6471 404.1731 315.6471ZM250.1524 286.219C240.4043 286.219 259.3052 305.0932 264.8395 305.0932 266.8071 305.0932 267.6084 303.5659 268.3497 302.3104 272.4724 295.3293 271.7799 298.7572 261.7089 291.2122 258.5942 288.8785 254.4007 286.219 250.1524 286.219" fill-rule="evenodd"/>
+    </svg>
+  </div>
+  <div class="header-divider"></div>
+  <div class="header-text">
+    <h1>Sourdough Calculator</h1>
+    <p>Dough formula &amp; starter feeding</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- Section: Dough + Feeding (linked) -->
+  <div class="section-row">
+    <span class="section-heading">Dough recipe &amp; feeding</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="grid" style="margin-bottom: 2.5rem;">
+
+    <!-- WIDGET A -->
+    <div class="card">
+      <div class="card-header red">
+        <div class="card-badge red">A</div>
+        <span class="card-title">Total dough recipe</span>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label for="totalFlour">Total flour (g)</label>
+          <input type="number" id="totalFlour" placeholder="e.g. 1000" min="1" step="1" />
+        </div>
+        <div class="field">
+          <label for="hydration">Hydration (%)</label>
+          <input type="number" id="hydration" placeholder="e.g. 72" min="1" max="200" step="0.1" />
+        </div>
+        <div class="field">
+          <label for="inoculation">Inoculation (%)</label>
+          <input type="number" id="inoculation" placeholder="e.g. 20" min="0.1" max="100" step="0.1" />
+        </div>
+        <hr class="section-divider" />
+        <div id="recipeOutput"><p class="empty-state">Fill in the fields above to see the recipe.</p></div>
+      </div>
+    </div>
+
+    <!-- WIDGET B -->
+    <div class="card">
+      <div class="card-header green">
+        <div class="card-badge green">B</div>
+        <span class="card-title">Starter feeding</span>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label for="starterTotal">Total starter needed (g) <span class="pulled-tag" id="pulledTag"></span></label>
+          <input type="number" id="starterTotal" placeholder="Auto from A, or enter manually" min="0.1" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Feeding ratio — seed : flour : water</label>
+          <div class="ratio-row">
+            <input type="number" id="r1" value="1" min="0.1" step="0.1" />
+            <span class="ratio-sep">:</span>
+            <input type="number" id="r2" value="4" min="0.1" step="0.1" />
+            <span class="ratio-sep">:</span>
+            <input type="number" id="r3" value="4" min="0.1" step="0.1" />
+          </div>
+        </div>
+        <hr class="section-divider" />
+        <div id="feedingOutput"><p class="empty-state">Enter starter amount and ratio above.</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Section: Independent feeding ratio calculator -->
+  <div class="section-row">
+    <span class="section-heading">Feeding ratio calculator</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="grid single">
+    <div class="card">
+      <div class="card-header amber">
+        <div class="card-badge amber">C</div>
+        <span class="card-title">Independent feeding ratio</span>
+      </div>
+      <div class="card-body">
+
+        <div class="field">
+          <label>Feeding ratio — seed : flour : water</label>
+          <div class="ratio-row">
+            <input type="number" id="c_r1" value="1" min="0.1" step="0.1" />
+            <span class="ratio-sep">:</span>
+            <input type="number" id="c_r2" value="4" min="0.1" step="0.1" />
+            <span class="ratio-sep">:</span>
+            <input type="number" id="c_r3" value="4" min="0.1" step="0.1" />
+          </div>
+        </div>
+
+        <div class="toggle-group">
+          <button id="btn_seed"  class="active"  onclick="setMode('seed')">I know my seed (g)</button>
+          <button id="btn_flour" class=""         onclick="setMode('flour')">I know my flour (g)</button>
+          <button id="btn_water" class=""         onclick="setMode('water')">I know my water (g)</button>
+        </div>
+
+        <div class="field" id="c_input_wrap">
+          <label id="c_input_label">Seed amount (g)</label>
+          <input type="number" id="c_known" placeholder="Enter grams" min="0.1" step="0.1" />
+        </div>
+
+        <hr class="section-divider" />
+        <div id="cOutput"><p class="empty-state">Enter your ratio and a known value above.</p></div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>Capitani Pizzeria &nbsp;·&nbsp; <span>sourdough calculator</span></p>
+</footer>
+
+<script>
+  // ── Widgets A + B ──
+  ['totalFlour','hydration','inoculation','starterTotal','r1','r2','r3'].forEach(id =>
+    document.getElementById(id).addEventListener('input', compute)
+  );
+
+  function fmt(n) { return n.toFixed(1) + ' g'; }
+
+  function row(label, val, cls) {
+    return `<div class="result-row"><span class="result-label">${label}</span><span class="result-val${cls ? ' ' + cls : ''}">${val}</span></div>`;
+  }
+
+  function compute() {
+    const flour   = parseFloat(document.getElementById('totalFlour').value);
+    const hydPct  = parseFloat(document.getElementById('hydration').value);
+    const inocPct = parseFloat(document.getElementById('inoculation').value);
+    const r1 = parseFloat(document.getElementById('r1').value) || 1;
+    const r2 = parseFloat(document.getElementById('r2').value) || 4;
+    const r3 = parseFloat(document.getElementById('r3').value) || 4;
+
+    const recipeDiv    = document.getElementById('recipeOutput');
+    const feedDiv      = document.getElementById('feedingOutput');
+    const pulledTag    = document.getElementById('pulledTag');
+    const starterInput = document.getElementById('starterTotal');
+
+    const validDough = flour > 0 && hydPct > 0 && inocPct > 0;
+    const ratioTotal = r1 + r2 + r3;
+
+    let starterTotal, seedAB, feedFlour, feedWater;
+
+    if (validDough) {
+      starterTotal = flour * inocPct / 100;
+      if (document.activeElement !== starterInput) starterInput.value = starterTotal.toFixed(1);
+      pulledTag.textContent = '← from A';
+    } else {
+      starterTotal = parseFloat(starterInput.value);
+      pulledTag.textContent = '';
+    }
+
+    if (starterTotal > 0 && r1 > 0 && r2 > 0 && r3 > 0) {
+      seedAB     = starterTotal * r1 / ratioTotal;
+      feedFlour  = starterTotal * r2 / ratioTotal;
+      feedWater  = starterTotal * r3 / ratioTotal;
+    }
+
+    // Widget A
+    if (validDough && starterTotal > 0 && feedFlour !== undefined) {
+      const totalWater = flour * hydPct / 100;
+      const finalFlour = flour - feedFlour;
+      const finalWater = totalWater - feedWater;
+      recipeDiv.innerHTML =
+        `<p class="result-section-label">Totals</p>` +
+        row('Total flour', fmt(flour)) +
+        row('Total water', fmt(totalWater)) +
+        row('Total starter', fmt(starterTotal), 'accent-red') +
+        `<p class="result-section-label">From starter</p>` +
+        row('Flour from starter', fmt(feedFlour)) +
+        row('Water from starter', fmt(feedWater)) +
+        `<p class="result-section-label">Add to final dough</p>` +
+        row('Flour to add', fmt(finalFlour)) +
+        row('Water to add', fmt(finalWater));
+    } else {
+      recipeDiv.innerHTML = '<p class="empty-state">Fill in the fields above to see the recipe.</p>';
+    }
+
+    // Widget B
+    if (starterTotal > 0 && seedAB !== undefined) {
+      feedDiv.innerHTML =
+        `<p class="result-section-label">Feeding breakdown</p>` +
+        row('Seed (mature starter)', fmt(seedAB)) +
+        row('Fresh flour', fmt(feedFlour)) +
+        row('Water', fmt(feedWater)) +
+        `<div class="result-total">
+          <span class="result-label">Total after feeding</span>
+          <span class="result-val accent-green">${fmt(starterTotal)}</span>
+        </div>`;
+    } else {
+      feedDiv.innerHTML = '<p class="empty-state">Enter starter amount and ratio above.</p>';
+    }
+  }
+
+  // ── Widget C: independent feeding ratio ──
+  let cMode = 'seed'; // 'seed' | 'flour' | 'water'
+
+  const modeConfig = {
+    seed:  { label: 'Seed amount (g)',         btnId: 'btn_seed' },
+    flour: { label: 'Fresh flour amount (g)',   btnId: 'btn_flour' },
+    water: { label: 'Water amount (g)',         btnId: 'btn_water' },
+  };
+
+  function setMode(mode) {
+    cMode = mode;
+    document.getElementById('c_input_label').textContent = modeConfig[mode].label;
+    document.getElementById('c_known').value = '';
+    document.getElementById('c_known').placeholder = 'Enter grams';
+    document.getElementById('cOutput').innerHTML = '<p class="empty-state">Enter your ratio and a known value above.</p>';
+    ['seed','flour','water'].forEach(m => {
+      document.getElementById(modeConfig[m].btnId).classList.toggle('active', m === mode);
+    });
+  }
+
+  ['c_r1','c_r2','c_r3','c_known'].forEach(id =>
+    document.getElementById(id).addEventListener('input', computeC)
+  );
+
+  function computeC() {
+    const cr1   = parseFloat(document.getElementById('c_r1').value) || 1;
+    const cr2   = parseFloat(document.getElementById('c_r2').value) || 4;
+    const cr3   = parseFloat(document.getElementById('c_r3').value) || 4;
+    const known = parseFloat(document.getElementById('c_known').value);
+    const out   = document.getElementById('cOutput');
+
+    if (!(known > 0)) {
+      out.innerHTML = '<p class="empty-state">Enter your ratio and a known value above.</p>';
+      return;
+    }
+
+    const total = cr1 + cr2 + cr3;
+    let seed, flour, water;
+
+    if (cMode === 'seed') {
+      seed  = known;
+      flour = known * cr2 / cr1;
+      water = known * cr3 / cr1;
+    } else if (cMode === 'flour') {
+      flour = known;
+      seed  = known * cr1 / cr2;
+      water = known * cr3 / cr2;
+    } else {
+      water = known;
+      seed  = known * cr1 / cr3;
+      flour = known * cr2 / cr3;
+    }
+
+    const totalJar = seed + flour + water;
+
+    out.innerHTML =
+      `<p class="result-section-label">Breakdown</p>` +
+      row('Seed (mature starter)', fmt(seed)) +
+      row('Fresh flour', fmt(flour)) +
+      row('Water', fmt(water)) +
+      `<div class="result-total">
+        <span class="result-label">Total jar after feeding</span>
+        <span class="result-val accent-amber">${fmt(totalJar)}</span>
+      </div>`;
+  }
+</script>
+
+</body>
+</html>
